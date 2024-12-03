@@ -1,44 +1,35 @@
 import { Injectable } from '@angular/core';
+import { decodedToken, permissionOptions, tokenInfo  } from '../models/tokenModels';
 
-interface DecodedToken {
-  permissions: { p: string, o: string }[];
-  exp: number;
-  iat?: number;
-}
-
-export interface tokenInfo {
-  expiration: Date,
-  permissionsTree: { [key: string]: permissionOptions }
-}
-
-export interface permissionOptions {
-  denyAccess: boolean,
-  allowCreate: boolean,
-  allowRead: boolean,
-  allowUpdate: boolean,
-  allowDelete: boolean
-  allowExport: boolean,
-  allowPrint: boolean
-}
 
 @Injectable({
   providedIn: 'root'
 })
-export class JwtService {
+export class JwtDecodeService {
 
   constructor() { }
 
-  public decodeToken(token: string): DecodedToken | null {
+  /**
+   *
+   * @param token jwt
+   * @returns un jwt decodificado desde su payload
+   */
+  public decodeToken(token: string): decodedToken | null {
     try {
       const payload = token.split('.')[1];
       const decodedPayload = atob(payload);
-      return JSON.parse(decodedPayload) as DecodedToken;
+      return JSON.parse(decodedPayload) as decodedToken;
     } catch (Error) {
       console.error('Invalid token:', Error);
       return null;
     }
   }
 
+  /**
+   *Formatea los datos del token para facilitar su uso, sobre todo lo relacioado con los permisos
+   * @param token
+   * @returns
+   */
   public formatTokenData(token: string): tokenInfo | null {
 
     const permissionsTree: { [key: string]: permissionOptions } = {};
@@ -47,7 +38,10 @@ export class JwtService {
       return null;
     }
 
-    //Formatea de {p:"1.2.3", o:"0111111" } a {"1.2.3":{denyAccess:true,allowCreate:true... etc }}
+
+    /**
+     * Formatea de {p:"1.2.3", o:"0111111" } a {"1.2.3":{denyAccess:true,allowCreate:true... etc }}
+     */
     decoded.permissions.forEach(permission => {
       permissionsTree[permission.p] = this.setPermissionOptions(this.convertFlags(permission.o))
     });
@@ -58,10 +52,20 @@ export class JwtService {
     };
   }
 
+  /**
+   * Convierte los flags de permisos en un array de booleanos
+   * @param flags banderas de opciones permisos (acciones) en formato string "1000001"
+   * @returns una lista de booleanos con las opciones de permisos
+   */
   private convertFlags(flags: string): boolean[] {
     return flags.split('').map(flag => flag === '1');
   }
 
+  /**
+   * Formatea el arreglo de booleanos en un objeto con nombres específicos para cada bandera
+   * @param flags arreglo de booleanos con las opciones de permisos
+   * @returns un objeto con las opciones de permisos con nombres específicos
+   */
   private setPermissionOptions(flags: boolean[]): permissionOptions {
     return {
       denyAccess: flags[0],

@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
-import { JwtService } from 'security-lib';
+import { AuthService, CryptService, JwtDecodeService, StorageService } from './public-api';
+
 
 
 @NgModule({
-  providers: [JwtService]
+  providers: [JwtDecodeService, AuthService, StorageService, CryptService]
 })
 export class SecurityLibModule { }
