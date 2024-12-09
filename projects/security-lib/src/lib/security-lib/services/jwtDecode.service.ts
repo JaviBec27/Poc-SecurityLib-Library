@@ -50,6 +50,7 @@ export class JwtDecodeService {
       permissionsTree,
       expiration: new Date(decoded.exp * 1000)
     };
+
   }
 
   /**
